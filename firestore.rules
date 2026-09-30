@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Default-deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation helper for User Profile
+    function isValidUserProfile(data, userId) {
+      return data.uid == userId &&
+        data.state is string && data.state.size() <= 80 &&
+        data.district is string && data.district.size() <= 80 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+        (!('preferredLanguage' in data) || (data.preferredLanguage is string && data.preferredLanguage.size() <= 30)) &&
+        (!('acreage' in data) || (data.acreage is number && data.acreage >= 0 && data.acreage <= 5000)) &&
+        (!('primaryCrop' in data) || (data.primaryCrop is string && data.primaryCrop.size() <= 80));
+    }
+
+    // Validation helper for Saved Advisory
+    function isValidSavedAdvisory(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() <= 128 &&
+        data.headline is string && data.headline.size() <= 300 &&
+        data.crop is string && data.crop.size() <= 80;
+    }
+
+    // Validation helper for Diagnostic Record
+    function isValidDiagnosticRecord(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() <= 128 &&
+        data.crop is string && data.crop.size() <= 80 &&
+        data.diseaseDetected is string && data.diseaseDetected.size() <= 150;
+    }
+
+    // Rules for User Profile collection
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming(), userId) &&
+        incoming().uid == existing().uid;
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Subcollection: Saved Advisories
+      match /savedAdvisories/{advisoryId} {
+        allow get, list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(advisoryId) && isValidSavedAdvisory(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(advisoryId) && isValidSavedAdvisory(incoming(), userId) &&
+          incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(advisoryId);
+      }
+
+      // Subcollection: Diagnostic History
+      match /diagnostics/{diagId} {
+        allow get, list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(diagId) && isValidDiagnosticRecord(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(diagId) && isValidDiagnosticRecord(incoming(), userId) &&
+          incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(diagId);
+      }
+    }
+  }
+}

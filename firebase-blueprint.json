@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Farmer profile information and regional preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "state": { "type": "string", "maxLength": 80 },
+        "district": { "type": "string", "maxLength": 80 },
+        "preferredLanguage": { "type": "string", "maxLength": 30 },
+        "acreage": { "type": "number" },
+        "primaryCrop": { "type": "string", "maxLength": 80 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "state", "district"]
+    },
+    "SavedAdvisory": {
+      "title": "SavedAdvisory",
+      "description": "Historical agro-advisories bookmarked by the farmer.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "headline": { "type": "string", "maxLength": 300 },
+        "state": { "type": "string", "maxLength": 80 },
+        "district": { "type": "string", "maxLength": 80 },
+        "crop": { "type": "string", "maxLength": 80 },
+        "riskLevel": { "type": "string", "maxLength": 30 },
+        "irrigationAction": { "type": "string", "maxLength": 500 },
+        "soilNutrition": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "headline", "crop"]
+    },
+    "DiagnosticRecord": {
+      "title": "DiagnosticRecord",
+      "description": "Archived crop disease diagnosis results.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "crop": { "type": "string", "maxLength": 80 },
+        "diseaseDetected": { "type": "string", "maxLength": 150 },
+        "severity": { "type": "string", "maxLength": 30 },
+        "confidenceScore": { "type": "number" },
+        "immediateAction": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "crop", "diseaseDetected"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Farmer profile settings and primary agricultural preferences."
+    },
+    "/users/{userId}/savedAdvisories/{advisoryId}": {
+      "schema": "SavedAdvisory",
+      "description": "Historical agro-advisories bookmarked by the authenticated farmer."
+    },
+    "/users/{userId}/diagnostics/{diagId}": {
+      "schema": "DiagnosticRecord",
+      "description": "Saved crop pathology analysis history."
+    }
+  }
+}

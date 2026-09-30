@@ -1,0 +1,9 @@
+{
+  "name": "KrishiSetu AI - Interoperable Digital Agriculture Network",
+  "description": "National digital public infrastructure for Indian farmers featuring AI agro-advisories, multimodal crop disease diagnosis, satellite & soil analytics, and cross-state agricultural cooperation grid.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
+
